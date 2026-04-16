@@ -1,14 +1,6 @@
 import sys
 import os
 
-import streamlit as st
-
-
-os.environ["DAGSHUB_USER_TOKEN"] = st.secrets["DAGSHUB_USER_TOKEN"]
-os.environ["MLFLOW_TRACKING_USERNAME"] = st.secrets["MLFLOW_TRACKING_USERNAME"]
-os.environ["MLFLOW_TRACKING_PASSWORD"] = st.secrets["MLFLOW_TRACKING_PASSWORD"]
-os.environ["MLFLOW_TRACKING_URI"] = st.secrets["MLFLOW_TRACKING_URI"]
-
 import certifi
 ca = certifi.where()
 
@@ -71,13 +63,18 @@ async def train_route():
 @app.post("/predict")
 async def predict_route(request: Request,file: UploadFile = File(...)):
     try:
-        df=pd.read_csv(file.file)
+        df=pd.read_csv(file.file, nrows=20)
         #print(df)
+
+        if "Result" in df.columns:
+            df = df.drop(columns=["Result"], axis=1)
+
         preprocesor=load_object("final_model/preprocessor.pkl")
         final_model=load_object("final_model/model.pkl")
         network_model = NetworkModel(preprocessor=preprocesor,model=final_model)
         print(df.iloc[0])
         y_pred = network_model.predict(df)
+        print(y_pred)
         df['predicted_column'] = y_pred
         print(df['predicted_column'])
         #df['predicted_column'].replace(-1, 0)
@@ -85,7 +82,10 @@ async def predict_route(request: Request,file: UploadFile = File(...)):
         df.to_csv('prediction_output/output.csv')
         table_html = df.to_html(classes='table table-striped')
         #print(table_html)
-        return templates.TemplateResponse("table.html", {"request": request, "table": table_html})
+        return templates.TemplateResponse(
+            request=request,
+            name="table.html",
+            context={"request": request, "table": table_html})
         
     except Exception as e:
         raise NetworkSecurityException(e,sys)

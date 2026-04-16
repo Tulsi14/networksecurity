@@ -27,7 +27,7 @@ from sklearn.ensemble import (
 import mlflow
 
 import dagshub
-
+dagshub.init(repo_owner='Tulsi14', repo_name='network-security-mlops-pipeline', mlflow=True)
 
 
 class ModelTrainer:

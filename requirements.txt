@@ -13,5 +13,4 @@ fastapi
 uvicorn
 python-multipart
 protobuf<=3.20.3
-streamlit
 ##-e.
